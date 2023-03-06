@@ -30,8 +30,6 @@ public:
                 }
             }));
         }
-        // for(auto &a : thread_arr_)
-        //         a.detach();
     }
 
     ~ThreadPool(){
