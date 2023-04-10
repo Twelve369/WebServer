@@ -8,6 +8,12 @@
 #include<functional>
 #include<cassert>
 
+/*
+    线程池实现:
+    1 任务队列，任务队列中包含线程需要执行的回调函数
+    2 任务队列的访问需要互斥
+    3 条件变量实现条件同步，没有任务时线程睡眠，有任务时唤醒线程
+*/
 class ThreadPool{
 public:
     explicit ThreadPool(size_t Thread_num = 4) : tool_ptr_(std::make_shared<tools>()){
@@ -25,7 +31,7 @@ public:
                     }else if(tool_ptr_->is_closed){
                         break;
                     }else{
-                        tool_ptr_->cond.wait(locker);
+                        tool_ptr_->cond.wait(locker); // 任务队列为空时，锁被释放，线程进入睡眠
                     }
                 }
             }));

@@ -139,9 +139,7 @@ int main(int argc, char* argv[])
     while(!stop_server)
     {   
         cout<<"*****************************************"<<endl;
-        cout<<"epoll start"<<endl;
         int num = my_epoll_wait(epollfd, events, MAX_EVENT_NUM, -1);
-        cout<<"epoll end"<<endl;
         if((num < 0) && (errno != EINTR))
         {
             printf("epoll_wait error\n");

@@ -1,8 +1,7 @@
 #include "epoll.h"
 
-Epoller::Epoller(int max_event_num) : epollfd_(epoll_create(1)){
-    assert(max_event_num >= 1);
-    events_ptr_ = make_shared<vector<struct epoll_event>> (new vector<epoll_event>(max_event_num));
+Epoller::Epoller(int max_event_num) : epollfd_(epoll_create(1)), events(max_event_num){
+    assert(max_event_num >= 1 && epollfd_ >= 0);
 }
 
 Epoller::~Epoller(){
@@ -10,14 +9,14 @@ Epoller::~Epoller(){
 }
 
 int Epoller::wait(const int timeout){
-    return epoll_wait(epollfd_, &(*events_ptr_)[0], (*events_ptr_).size(), timeout);
+    return epoll_wait(epollfd_, &events[0], events.size(), timeout);
 }
 
-bool Epoller::addfd(int fd, uint32_t events){
+bool Epoller::addfd(int fd, uint32_t event){
     epoll_event ee;
     memset(&ee, 0, sizeof ee);
     ee.data.fd = fd;
-    ee.events = events;
+    ee.events = event;
     return epoll_ctl(epollfd_, EPOLL_CTL_ADD, fd, &ee) == 0;
 }
 
@@ -25,10 +24,10 @@ bool Epoller::removefd(int fd){
     return epoll_ctl(epollfd_, EPOLL_CTL_DEL, fd, nullptr) == 0;
 }
 
-bool Epoller::modfd(int fd, uint32_t events){
+bool Epoller::modfd(int fd, uint32_t event){
     epoll_event ee;
     memset(&ee, 0, sizeof ee);
     ee.data.fd = fd;
-    ee.events = events;
+    ee.events = event;
     return epoll_ctl(epollfd_, EPOLL_CTL_MOD, fd, &ee) == 0;
 }
