@@ -12,7 +12,7 @@
 template<typename T>
 class threadpool{
 public:
-    threadpool(int thread_num, int request_num);
+    threadpool(int thread_num = THREAD_NUM, int request_num = 10000);
     ~threadpool();
     bool append(T* request);
 
@@ -35,7 +35,7 @@ int round_num = 0;
 int thread_id = 0;
 
 template<typename T>
-threadpool<T>::threadpool(int thread_num = THREAD_NUM, int request_num = 10000) : m_thread_num(thread_num), m_request_num(request_num), m_pthread(nullptr), m_stop(false) {
+threadpool<T>::threadpool(int thread_num, int request_num) : m_thread_num(thread_num), m_request_num(request_num), m_pthread(nullptr), m_stop(false) {
     if(thread_num <= 0 || request_num <= 0){
         throw std::exception();
     }

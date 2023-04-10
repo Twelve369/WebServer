@@ -9,7 +9,6 @@ const char* error_title_404 = "Not Found";
 const char* error_form_404 = "The requested file was not found on this server.\n";
 const char* error_title_500 = "Internal Error";
 const char* error_form_500 = "There was an unusual problem serving the requested file.\n";
-const char* doc_root = "/root/myWebServer/html";
 
 int httpConect::m_epollfd = -1;
 int httpConect::m_user_count = 0;
@@ -81,7 +80,8 @@ void httpConect::init()
     m_content_len = 0;
     m_content = 0;
     m_linger = false;
-    
+
+    getcwd(doc_root, sizeof(doc_root) - 1);
     memset(m_read_buf, '\0', sizeof(m_read_buf));
     memset(m_write_buf, '\0', sizeof(m_write_buf));
     memset(m_real_file, '\0', sizeof(m_real_file));
@@ -91,7 +91,7 @@ void httpConect::close_connect()
 {
     if(m_epollfd != -1)
     {
-        printf("close connect...\n");
+        printf("close connect id %d...\n", m_sockfd);
         --m_user_count;
         removefd(m_epollfd, m_sockfd);
     }
@@ -246,29 +246,28 @@ bool httpConect::process_write(HTTP_CODE result)
             add_status_line(200, ok_title_200);
 
             if(m_method == POST)
-            {
-                cout<<m_content<<endl;
-                add_response("Content-type:text/html\r\n");
-                add_response("\r\n");
-                m_iv[0].iov_base = m_write_buf;
-                m_iv[0].iov_len = m_write_idx;
-                m_iv[1].iov_base = m_content;
-                m_iv[1].iov_len = m_content_len;
-                m_iv_count = 2;
-                return true;
-            }
+            {   
+                cout << "post content : " << endl;
+                cout<<m_content<<" "<<m_content_len<<endl;
+                char* sign_response;
+                char* user = strstr(m_content, "user=123&");
+                char* passwd = strstr(m_content, "password=123&");
+                if(user != NULL && passwd != NULL){
+                    sign_response = (char*)"sign in success\n";
+                }else{
+                    sign_response = (char*)"sign in failed\n";
+                }
+                add_header(strlen(sign_response));
+                if(!add_content(sign_response)) return false;
 
-            if(m_file_stat.st_size == 0)
-            {
+            }else if(m_file_stat.st_size == 0){
                 const char* ok_form = "this is a empty file\n";
                 add_header(strlen(ok_form));
                 if(!add_content(ok_form))
                 {
                     return false;
                 }
-            }
-            else
-            {
+            }else{
                 add_header(m_file_stat.st_size);
                 m_iv[0].iov_base = m_write_buf;
                 m_iv[0].iov_len = m_write_idx;
@@ -332,7 +331,7 @@ httpConect::HTTP_CODE httpConect::do_request()
 
     if(strcmp(m_url, "/post") == 0)//POST请求
     {   
-        cout<<"post request"<<endl;
+       // cout<<"post request"<<endl;
         return FILE_REQUEST;
     }
 
@@ -413,7 +412,7 @@ httpConect::HTTP_CODE httpConect::parse_requestline(char* text)
     *m_url++ = '\0';
 
     char* method = text;
-    cout<<method<<endl;
+    //cout<<method<<endl;
     if(strcasecmp(method, "GET") == 0)  //strcasecmp() 两个字符串比大小 相同返回0
     {
         m_method = GET;
@@ -511,9 +510,6 @@ httpConect::HTTP_CODE httpConect::parse_content(char* text)
     if(m_read_idx >= m_check_idx + m_content_len)
     {
         m_content[m_content_len] = '\0';
-        cout<<m_content<<endl;
-        //text[m_content_len] = '\0';
-        //m_content = text;
         return GET_REQUEST;
     }
     return NO_REQUEST;//说明content部分还未完全接收
@@ -575,14 +571,14 @@ void httpConect::process()
     HTTP_CODE result = process_read();
     if(result == NO_REQUEST)
     {
-        addTimerToHeap(this, 10000);//超时时间10秒
+        // addTimerToHeap(this, 10000);//超时时间10秒
         modfd(m_epollfd, m_sockfd, EPOLLIN);
         return;
     }
 
     if(!process_write(result))
     {
-        closeTimer();
+        // closeTimer();
         close_connect();
         return;
     }

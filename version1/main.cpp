@@ -138,7 +138,6 @@ int main(int argc, char* argv[])
 
     while(!stop_server)
     {   
-        cout<<"*****************************************"<<endl;
         int num = my_epoll_wait(epollfd, events, MAX_EVENT_NUM, -1);
         if((num < 0) && (errno != EINTR))
         {
@@ -172,11 +171,11 @@ int main(int argc, char* argv[])
                 }
                 char addr[20];
                 inet_ntop(AF_INET, (void*)&client_addr.sin_addr, addr, 20);
-                printf("client connected, client ip: %s \n", addr);
+                printf("client connected, id : %d, client ip: %s \n", clientfd, addr);
                 users[clientfd].init(clientfd, client_addr);
                 
                 //建立新连接时开始定时
-                addTimerToHeap(users + clientfd, TIME_LIMITED);
+                // addTimerToHeap(users + clientfd, TIME_LIMITED);
             }  
             else if((sockfd == sig_pipefd[0]) && (events[i].events & EPOLLIN)) //处理信号事件
             {
@@ -207,7 +206,7 @@ int main(int argc, char* argv[])
             else if(events[i].events & EPOLLIN)//用户请求事件
             {  
                 //只要有用户请求事件就将定时器和用户请求分离
-                users[sockfd].closeTimer();
+                // users[sockfd].closeTimer();
                 if(users[sockfd].read())
                 {
                     pool->append(users + sockfd);
@@ -222,13 +221,13 @@ int main(int argc, char* argv[])
                 if(!users[sockfd].write())//如果是keep-alive的话就不断开连接
                 {
                     users[sockfd].close_connect();
-                    users[sockfd].closeTimer();
+                    // users[sockfd].closeTimer();
                 }
-                addTimerToHeap(users + sockfd, TIME_LIMITED);
+                // addTimerToHeap(users + sockfd, TIME_LIMITED);
             }
             else if(events[i].events & (EPOLLHUP | EPOLLRDHUP | EPOLLERR))
             {
-                users[sockfd].closeTimer();
+                // users[sockfd].closeTimer();
                 users[sockfd].close_connect();
             }
             
@@ -237,8 +236,7 @@ int main(int argc, char* argv[])
         //每一轮epoll结束后，处理超时连接
         //如果某个连接超时了，但是又触发了EPOLLIN事件，则会为将该连接的定时器分离，然后再请求处理完成后再建立新的定时器
         //这样做的好处是，即使某个连接超时了，如果该连接又发送请求，不会为该连接创建新链接，节省资源。
-        handle_empired_connect();
-        cout<<"*****************************************"<<endl;
+        // handle_empired_connect();
     }
 
     close(epollfd);

@@ -92,6 +92,7 @@ private:
     int m_content_len;
     bool m_linger;
     char* m_content;
+    char doc_root[200];
 
     char* m_file_address;//将真实文件映射到该地址上
     struct stat m_file_stat;
