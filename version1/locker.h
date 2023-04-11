@@ -4,7 +4,6 @@
 #include<pthread.h>
 #include<exception>
 
-//封装POSIX信号量
 class sem{
 public:
     sem(){
@@ -17,22 +16,19 @@ public:
         sem_destroy(&m_sem);
     }
 
-    //信号量-1
     bool wait(){
         return sem_wait(&m_sem) == 0;
     }
 
-    //信号量+1
     bool post(){
         return sem_post(&m_sem) == 0;
     }
 
 private:
-    sem_t m_sem; //信号量
+    sem_t m_sem; 
 };
 
 
-//封装互斥锁
 class locker{
 public:
     locker(){
@@ -57,7 +53,6 @@ private:
     pthread_mutex_t m_mutex;
 };
 
-//封装条件变量
 class cond
 {
 public:
