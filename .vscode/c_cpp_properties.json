@@ -6,7 +6,7 @@
                 "${workspaceFolder}/**"
             ],
             "defines": [],
-            "compilerPath": "/opt/rh/devtoolset-7/root/bin/g++",
+            "compilerPath": "/opt/rh/devtoolset-9/root/bin/g++",
             "cStandard": "c11",
             "cppStandard": "c++14",
             "intelliSenseMode": "linux-gcc-x64"
